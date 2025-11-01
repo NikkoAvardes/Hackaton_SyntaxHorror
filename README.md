@@ -177,3 +177,5 @@ public/
 ---
 
 *Développé pour le Hackathon avec ❤️ et 👻*
+
+**Créé par Nicolai, étudiant à Holberton School**
