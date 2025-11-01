@@ -166,3 +166,33 @@
     transform: translate(-50%, -50%) scale(1);
   }
 }
+
+/* Animations pour les screamers */
+@keyframes fadeIn {
+  from { 
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to { 
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes screamerPulse {
+  0% { 
+    opacity: 0.8;
+    transform: scale(1);
+    text-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000;
+  }
+  50% { 
+    opacity: 1;
+    transform: scale(1.1);
+    text-shadow: 0 0 30px #ff0000, 0 0 60px #ff0000, 0 0 80px #ff0000;
+  }
+  100% { 
+    opacity: 0.8;
+    transform: scale(1);
+    text-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000;
+  }
+}

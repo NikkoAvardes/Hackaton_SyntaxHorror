@@ -1,0 +1,8 @@
+# Placeholder pour la musique de fond
+
+Remplacez ce fichier par votre musique de fond et renommez-le en :
+- background_music.mp3
+- background_music.wav  
+- background_music.ogg
+
+Le système testera ces formats dans l'ordre et utilisera le premier disponible.

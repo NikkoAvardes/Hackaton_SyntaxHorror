@@ -6,6 +6,55 @@ import './App.css';
 
 console.log('App.jsx загружен');
 
+// Компонент фоновой музыки
+function BackgroundMusic({ isPlaying }) {
+  const audioRef = useRef(null);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    // Настройки аудио
+    audio.loop = true;
+    audio.volume = 0.4; // Музыка на 40%
+    audio.preload = 'auto';
+
+    // Воспроизведение или пауза
+    if (isPlaying) {
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            console.log('🎵 Фоновая музыка запущена');
+          })
+          .catch(error => {
+            console.log('❌ Не удалось запустить фоновую музыку:', error);
+          });
+      }
+    } else {
+      audio.pause();
+      console.log('⏸️ Фоновая музыка поставлена на паузу');
+    }
+
+    return () => {
+      if (audio) {
+        audio.pause();
+      }
+    };
+  }, [isPlaying]);
+
+  return (
+    <audio
+      ref={audioRef}
+      preload="auto"
+      style={{ display: 'none' }}
+    >
+      <source src="/music/scrimer.mp3" type="audio/mpeg" />
+      Ваш браузер не поддерживает аудио элемент.
+    </audio>
+  );
+}
+
 // FPS контроллер
 function FirstPersonControls({ onMove, currentRoom }) {
   const { camera, gl } = useThree();
@@ -30,7 +79,7 @@ function FirstPersonControls({ onMove, currentRoom }) {
       height: -0.6              // Hauteur vo время игры
     },
     chambre3: {
-      spawn: [0, 0.1, 5],        // Центр комнаты
+      spawn: [0.2, 0.1, -3.4],   // Новые координаты появления
       height: 0.1               // Высота во время игры (финальная комната)
     }
   };
@@ -78,8 +127,8 @@ function FirstPersonControls({ onMove, currentRoom }) {
     direction.current.x = Number(moveRight) - Number(moveLeft);
     direction.current.normalize();
 
-    if (moveForward || moveBackward) velocity.current.z -= direction.current.z * 40.0 * delta;
-    if (moveLeft || moveRight) velocity.current.x -= direction.current.x * 40.0 * delta;
+    if (moveForward || moveBackward) velocity.current.z -= direction.current.z * 15.0 * delta;
+    if (moveLeft || moveRight) velocity.current.x -= direction.current.x * 15.0 * delta;
 
     controlsRef.current.moveRight(-velocity.current.x * delta);
     controlsRef.current.moveForward(-velocity.current.z * delta);
@@ -96,10 +145,11 @@ function FirstPersonControls({ onMove, currentRoom }) {
         boundaries = { minX: -1.3, maxX: 1.3, minZ: -3.5, maxZ: -2.3 };
         break;
       case 'chambre2':
-        boundaries = { minX: -10, maxX: 10, minZ: -12, maxZ: 6 };
+        boundaries = { minX: -2.55, maxX: 2.40, minZ: -4.20, maxZ: 4.20
+		 };
         break;
       case 'chambreWC':
-        boundaries = { minX: -2, maxX: 8, minZ: -2, maxZ: 8 };
+        boundaries = { minX: -2.2, maxX: 2.15, minZ: -2.2, maxZ: -0.05 };
         break;
       case 'chambre3':
         boundaries = { minX: -12, maxX: 12, minZ: -12, maxZ: 12 };
@@ -163,10 +213,17 @@ function GLBModel({ path, visible = true }) {
 }
 
 // Компонент кодового замка
-function CodeLock({ isVisible, onSuccess, onClose }) {
+function CodeLock({ isVisible, onSuccess, onClose, currentRoom }) {
   const [code, setCode] = useState('');
   const [isWrong, setIsWrong] = useState(false);
-  const correctCode = '1234';
+  
+  // Разные коды для разных комнат
+  const roomCodes = {
+    chambre1: '0000',  // Код для входа в chambre2 из chambre1
+    chambre2: '2468'   // Код для входа в chambreWC из chambre2
+  };
+  
+  const correctCode = roomCodes[currentRoom] || '1234';
 
   const handleInput = (digit) => {
     if (code.length < 4) {
@@ -251,7 +308,7 @@ function CodeLock({ isVisible, onSuccess, onClose }) {
         onClick={(e) => e.stopPropagation()}
         onMouseDown={(e) => e.preventDefault()}
       >
-        <h2 style={{ margin: '0 0 20px 0', color: '#ff6666' }}>🔒 КОДОВЫЙ ЗАМОК</h2>
+        <h2 style={{ margin: '0 0 20px 0', color: '#ff6666' }}>🔒 CODE D'ACCÈS</h2>
         <div style={{
           fontSize: '24px',
           margin: '20px 0',
@@ -265,7 +322,7 @@ function CodeLock({ isVisible, onSuccess, onClose }) {
           alignItems: 'center',
           justifyContent: 'center'
         }}>
-          {code.replace(/./g, '*') || (isWrong ? 'ОШИБКА!' : '----')}
+          {code.replace(/./g, '*') || (isWrong ? 'ERREUR!' : '----')}
         </div>
         
         <div style={{
@@ -463,7 +520,7 @@ function HorrorScene({ onTrigger, currentRoom, onDoorInteraction, onCodeClose, o
       height: -1.6               // Высота во время игры
     },
     chambre3: {
-      spawn: [0, 0.1, 5],        // Центр комнаты
+      spawn: [0.2, 0.1, -3.4],   // Новые координаты появления
       height: -1.6               // Высота во время игры (финальная комната)
     }
   };
@@ -484,12 +541,10 @@ function HorrorScene({ onTrigger, currentRoom, onDoorInteraction, onCodeClose, o
   }, [currentRoom]);
   
   const checkTriggers = (position) => {
-    // Триггеры только в последнем помещении (chambre3)
-    if (currentRoom === 'chambre3') {
+    // Триггер screamer в chambreWC
+    if (currentRoom === 'chambreWC') {
       const triggers = [
-        { pos: [8, 0, 0], radius: 3, id: 'red', triggered: false },
-        { pos: [-8, 0, 0], radius: 3, id: 'green', triggered: false },
-        { pos: [0, 0, -8], radius: 3, id: 'blue', triggered: false }
+        { pos: [-1.75, 0, -2.20], radius: 1.5, id: 'wc_screamer', triggered: false }
       ];
 
       triggers.forEach((trigger) => {
@@ -497,6 +552,7 @@ function HorrorScene({ onTrigger, currentRoom, onDoorInteraction, onCodeClose, o
           const distance = position.distanceTo(new THREE.Vector3(...trigger.pos));
           if (distance < trigger.radius) {
             trigger.triggered = true;
+            console.log(`🎬 SCREAMER DÉCLENCHÉ ! Position: X:${position.x.toFixed(2)}, Z:${position.z.toFixed(2)}, Distance: ${distance.toFixed(2)}`);
             onTrigger(trigger.id);
           }
         }
@@ -689,9 +745,6 @@ function HorrorScene({ onTrigger, currentRoom, onDoorInteraction, onCodeClose, o
         <GLBModel path="/chambreWC.glb" visible={currentRoom === 'chambreWC'} />
         <GLBModel path="/chambre3.glb" visible={currentRoom === 'chambre3'} />
 
-        {/* Fallback комната только для chambre3 (с триггерами) */}
-        {currentRoom === 'chambre3' && <Room />}
-        
         {/* Fallback двери (если нет GLB моделей) */}
         {currentRoom === 'chambre1' && (
           <mesh position={[0, 1, 0]}>
@@ -715,78 +768,30 @@ function HorrorScene({ onTrigger, currentRoom, onDoorInteraction, onCodeClose, o
         )}
       </Canvas>
 
-      {/* Инструкции */}
+      {/* Instructions */}
       <div style={{
         position: 'absolute',
         top: 20,
         left: 20,
         color: 'white',
-        background: 'rgba(0,0,0,0.8)',
-        padding: '15px',
+        background: 'rgba(0,0,0,0.7)',
+        padding: '10px',
         borderRadius: '5px',
-        fontSize: '14px'
+        fontSize: '12px'
       }}>
-        <h3 style={{ margin: '0 0 10px 0', color: '#ff6666' }}>
-          🎮 Управление - {
-            currentRoom === 'chambre1' ? 'Chambre 1 (Старт)' :
-            currentRoom === 'chambre2' ? 'Chambre 2' :
-            currentRoom === 'chambreWC' ? 'Chambre WC' :
-            currentRoom === 'chambre3' ? 'Chambre 3 (Финал)' : currentRoom
-          }
+        <h3 style={{ margin: '0 0 8px 0', color: '#ff6666', fontSize: '14px' }}>
+          Contrôles
         </h3>
-        <ul style={{ margin: 0, paddingLeft: '20px' }}>
-          <li>W, A, S, D - Движение</li>
-          <li>Мышь - Обзор</li>
-          <li>Клик - Захват мыши</li>
-          <li>ESC - Освободить мышь</li>
-          {currentRoom === 'chambre1' && <li>🚪 [F] - код для входа в Chambre 2</li>}
-          {currentRoom === 'chambre2' && <li>🚪 [F] - код для входа в WC</li>}
-          {currentRoom === 'chambre2' && <li>🔓 [F] - прямой проход в Chambre 3 (X:-2.45, Z:-3.60)</li>}
-          {currentRoom === 'chambreWC' && <li>🚪 Подойдите к двери → автоматический переход в Chambre 3</li>}
-          {currentRoom === 'chambre3' && <li>👻 Найдите триггеры для скримеров!</li>}
+        <ul style={{ margin: 0, paddingLeft: '15px', listStyle: 'none' }}>
+          <li>W A S D - Déplacement</li>
+          <li>Souris - Regard</li>
+          <li>Clic - Capturer souris</li>
+          <li>ESC - Libérer souris</li>
+          {(currentRoom === 'chambre1' || currentRoom === 'chambre2') && <li>F - Ouvrir porte</li>}
         </ul>
-        
-        {/* Debug panel for boundaries */}
-        <div style={{
-          marginTop: '15px',
-          padding: '10px',
-          backgroundColor: 'rgba(0, 0, 255, 0.1)',
-          borderRadius: '5px',
-          fontSize: '12px',
-          color: '#66ccff'
-        }}>
-          <strong>🔧 Отладка границ:</strong><br/>
-          Текущие координаты: X: {playerPosition.x.toFixed(2)}, Z: {playerPosition.z.toFixed(2)}<br/>
-          Границы комнаты: {
-            currentRoom === 'chambre1' ? 'X: ±8, Z: ±8' :
-            currentRoom === 'chambre2' ? 'X: -10→10, Z: -12→6' :
-            currentRoom === 'chambreWC' ? 'X: -2→8, Z: -2→8' :
-            currentRoom === 'chambre3' ? 'X: ±12, Z: ±12' :
-            'неизвестно'
-          }
-        </div>
-        
-        <p style={{ fontSize: '12px', color: '#888', margin: '10px 0 0 0' }}>
-          Позиция: X:{playerPosition.x.toFixed(1)} Z:{playerPosition.z.toFixed(1)}
-        </p>
-        <button 
-          onClick={() => onTrigger('red')}
-          style={{
-            marginTop: '10px',
-            padding: '5px 10px',
-            background: '#ff3333',
-            color: 'white',
-            border: 'none',
-            borderRadius: '3px',
-            cursor: 'pointer',
-            fontSize: '12px'
-          }}
-        >
-          🔊 Тест звука
-        </button>
       </div>
 
-      {/* Уведомление о возможности активации кода */}
+      {/* Notification d'activation de code */}
       {nearDoor && (currentRoom === 'chambre1' || currentRoom === 'chambre2') && (
         <div style={{
           position: 'absolute',
@@ -804,15 +809,14 @@ function HorrorScene({ onTrigger, currentRoom, onDoorInteraction, onCodeClose, o
           zIndex: 1500,
           animation: 'pulse 2s infinite'
         }}>
-          🔑 ДВЕРЬ НАЙДЕНА!<br/>
+          🔑 PORTE !<br/>
           <span style={{ fontSize: '14px' }}>
-            {currentRoom === 'chambre1' ? 'Переход в Chambre 2' : 'Переход в WC'}<br/>
-            [F] - открыть код | [ESC] - закрыть
+            [F] - ouvrir 
           </span>
         </div>
       )}
 
-      {/* Уведомление о прямой двери в chambre3 */}
+      {/* Notification de porte directe vers chambre3 */}
       {nearDirectDoor && currentRoom === 'chambre2' && (
         <div style={{
           position: 'absolute',
@@ -830,10 +834,9 @@ function HorrorScene({ onTrigger, currentRoom, onDoorInteraction, onCodeClose, o
           zIndex: 1500,
           animation: 'pulse 2s infinite'
         }}>
-          🚪 ПРЯМОЙ ПРОХОД!<br/>
+          🚪 PORTE !<br/>
           <span style={{ fontSize: '14px' }}>
-            Переход в Chambre 3<br/>
-            [F] - открыть дверь
+            [F] - ouvrir porte
           </span>
         </div>
       )}
@@ -841,20 +844,49 @@ function HorrorScene({ onTrigger, currentRoom, onDoorInteraction, onCodeClose, o
   );
 }
 
-// Простой скример
+// Screamer simple
 function ScreamerEffect({ triggerId, onClose }) {
+  const audioRef = useRef(null);
+  
   const effects = {
-    red: "💀 КРАСНАЯ ЗОНА! 💀",
-    green: "🩸 ЗЕЛЕНАЯ ЗОНА! 🩸",
-    blue: "👁️ СИНЯЯ ЗОНА! 👁️"
+    wc_screamer: {
+      text: "💀 HORREUR ! 💀",
+      gif: "/screamers/4eiD.gif",
+      sound: "/music/gif.mp3"
+    }
   };
 
+  const currentEffect = effects[triggerId];
+
   useEffect(() => {
+    // Fermeture automatique après 2.5 secondes
     const timer = setTimeout(() => {
+      console.log('🎬 Screamer se ferme après 2.5 secondes');
       onClose();
-    }, 2000);
+    }, 2500);
+    
     return () => clearTimeout(timer);
   }, [onClose]);
+
+  useEffect(() => {
+    // Воспроизводим звук через 1 секунду после появления screamer
+    if (triggerId === 'wc_screamer' && currentEffect?.sound) {
+      const soundTimer = setTimeout(() => {
+        if (audioRef.current) {
+          audioRef.current.volume = 1.0; // Volume à 100%
+          audioRef.current.play()
+            .then(() => {
+              console.log('🔊 Son screamer à volume maximum');
+            })
+            .catch(error => {
+              console.log('❌ Ошибка воспроизведения звука screamer:', error);
+            });
+        }
+      }, 1000); // Запуск через 1 секунду
+
+      return () => clearTimeout(soundTimer);
+    }
+  }, [triggerId, currentEffect]);
 
   return (
     <div style={{
@@ -867,15 +899,49 @@ function ScreamerEffect({ triggerId, onClose }) {
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
-      zIndex: 1000
+      zIndex: 3000
     }}>
+      {/* Скрытый аудио элемент для звука screamer */}
+      {currentEffect?.sound && (
+        <audio
+          ref={audioRef}
+          preload="auto"
+          style={{ display: 'none' }}
+        >
+          <source src={currentEffect.sound} type="audio/mpeg" />
+        </audio>
+      )}
+
+      {/* GIF поверх текста */}
+      {currentEffect?.gif && (
+        <img 
+          src={currentEffect.gif}
+          alt="Screamer"
+          style={{
+            position: 'absolute',
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            zIndex: 3001
+          }}
+          onLoad={() => console.log('✅ GIF загружен успешно!')}
+          onError={(e) => {
+            console.log('❌ Ошибка загрузки GIF');
+            e.target.style.display = 'none';
+          }}
+        />
+      )}
+      
+      {/* Текст как запасной вариант */}
       <div style={{
+        position: 'absolute',
         fontSize: '4rem',
         color: '#fff',
-        textShadow: '0 0 10px #ff0000',
-        textAlign: 'center'
+        textShadow: '0 0 20px #ff0000',
+        textAlign: 'center',
+        zIndex: 3002
       }}>
-        {effects[triggerId] || "👻 НАЙДЕНО! 👻"}
+        {currentEffect?.text || "👻 SCREAMER! 👻"}
       </div>
     </div>
   );
@@ -889,6 +955,7 @@ function App() {
   const [audioContext, setAudioContext] = useState(null);
   const [currentRoom, setCurrentRoom] = useState('chambre1'); // Начинаем с первого помещения (chambre1)
   const [showCodeLock, setShowCodeLock] = useState(false);
+  const [musicPlaying, setMusicPlaying] = useState(false); // Состояние фоновой музыки
 
   // Инициализация звука при первом клике
   useEffect(() => {
@@ -922,6 +989,8 @@ function App() {
     const handleFirstInteraction = () => {
       console.log('👆 Первое взаимодействие - инициализируем звук');
       initAudio();
+      // Запускаем фоновую музыку при первом взаимодействии
+      setMusicPlaying(true);
     };
 
     document.addEventListener('click', handleFirstInteraction, { once: true });
@@ -1182,15 +1251,16 @@ function App() {
       <div className="App">
         <div className="start-screen">
           <h1>SYNTAX HORROR</h1>
-          <p>Двухуровневая система - Первое помещение → Код → Второе помещение</p>
+          <p>Explorez les chambres mystérieuses du HOLBERTO SCHOOL et découvrez leurs secrets...</p>
           <button 
             className="start-button" 
             onClick={() => {
-              console.log('Игра запущена');
+              console.log('Jeu démarré');
               setGameStarted(true);
+              setMusicPlaying(true);
             }}
           >
-            🎮 Начать
+            🎮 Commencer
           </button>
         </div>
       </div>
@@ -1207,6 +1277,9 @@ function App() {
         onRoomChange={setCurrentRoom}
       />
       
+      {/* Фоновая музыка */}
+      <BackgroundMusic isPlaying={musicPlaying && gameStarted} />
+      
       {showScreamer && (
         <ScreamerEffect triggerId={triggerId} onClose={closeScreamer} />
       )}
@@ -1216,6 +1289,7 @@ function App() {
           isVisible={showCodeLock}
           onSuccess={handleCodeSuccess}
           onClose={handleCodeClose}
+          currentRoom={currentRoom}
         />
       )}
       
@@ -1234,7 +1308,7 @@ function App() {
           zIndex: 1000
         }}
       >
-        🏠 Выход
+        🏠 Quitter
       </button>
       
       {currentRoom !== 'chambre1' && (
@@ -1253,7 +1327,7 @@ function App() {
             zIndex: 1000
           }}
         >
-          🚪 В Chambre 1
+          🚪 Retour Chambre 1
         </button>
       )}
     </div>
