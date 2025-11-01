@@ -1,48 +1,63 @@
-# Syntax Horror - Interactive Horror Experience
+# Syntax Horror - Expérience d'Horreur Interactive
 
-Une expérience d'horreur interactive construite avec React et Three.js, où les utilisateurs explorent un environnement 3D et rencontrent des screamers dans des zones prédéfinies.
+Une expérience d'horreur interactive construite avec React et Three.js, où les utilisateurs explorent un environnement 3D immersif avec des screamers et des puzzles de codes.
 
-## 📁 Как добавить свой 3D модель (.glb файл)
+## 🎮 Description du Jeu
 
-### 🎯 Куда поместить GLB файл:
+Syntax Horror est un jeu d'horreur en première personne qui vous fait explorer 4 chambres interconnectées :
 
-1. **Поместите ваш .glb файл в папку `public/`**
+- **Chambre 1** : Point de départ - Trouvez le code pour continuer
+- **Chambre 2** : Couloirs complexes avec choix de routes  
+- **Chambre WC** : Zone avec screamer - Attention !
+- **Chambre 3** : Destination finale
+
+### 🔐 Système de Codes
+- **Chambre 1 → Chambre 2** : Code `0000`
+- **Chambre 2 → Chambre WC** : Code `2468`
+- **Passage direct Chambre 2 → Chambre 3** : Pas de code requis
+
+### 👻 Effets d'Horreur
+- **Screamer dans Chambre WC** : GIF + Son synchronisé aux coordonnées X:-1.75, Z:-2.20
+- **Musique d'ambiance** : Boucle continue d'horreur
+- **Atmosphère sombre** : Éclairage minimal et effets visuels
+
+## 📁 Comment ajouter votre modèle 3D (.glb)
+
+### 🎯 Emplacement des fichiers GLB :
+
+1. **Placez vos fichiers .glb dans le dossier `public/`**
    ```
    Hackaton_SyntaxHorror/
    ├── public/
-   │   ├── 10_31_2025.glb    ← Текущий файл
-   │   └── your-model.glb    ← Ваш новый файл
+   │   ├── chambre1.glb     ← Modèle Chambre 1
+   │   ├── chambre2.glb     ← Modèle Chambre 2  
+   │   ├── chambreWC.glb    ← Modèle Chambre WC
+   │   ├── chambre3.glb     ← Modèle Chambre 3
+   │   ├── music/           ← Dossier audio
+   │   └── screamers/       ← Dossier GIF screamers
    └── src/
    ```
 
-2. **Измените путь в коде:**
-   - Откройте файл `src/App.jsx`
-   - Найдите строку: `<GLBModel path="/10_31_2025.glb" />`
-   - Замените на: `<GLBModel path="/your-model.glb" />`
+2. **Noms de fichiers requis :**
+   - `chambre1.glb` : Chambre de départ
+   - `chambre2.glb` : Chambre principale avec couloirs
+   - `chambreWC.glb` : Chambre avec screamer
+   - `chambre3.glb` : Chambre finale
 
-### 🔧 Требования к GLB файлу:
-- **Формат**: .glb (предпочтительно) или .gltf
-- **Размер**: Рекомендуется до 50MB для веба
-- **Координаты**: Центр модели должен быть в (0,0,0)
-- **Масштаб**: Модель будет загружена с масштабом 1:1
+### 🔧 Exigences pour les fichiers GLB :
+- **Format** : .glb (recommandé) ou .gltf
+- **Taille** : Recommandé ≤ 50MB pour les performances web
+- **Coordonnées** : Centre du modèle à (0,0,0)
+- **Échelle** : Les modèles sont chargés à l'échelle 1:1
 
-### � Текущие улучшения:
-- ✅ **Улучшено освещение** - теперь лучше видно
-- ✅ **Цветная подсветка** триггерных зон
-- ✅ **Автоматическая загрузка GLB** модели
-- ✅ **Fallback комната** если модель не загружается
-
-### 🚀 Быстрая замена модели:
-```bash
-# 1. Скопируйте ваш файл в public/
-cp /путь/к/вашей/модели.glb public/
-
-# 2. Обновите код (или используйте редактор)
-sed -i 's|/10_31_2025.glb|/модели.glb|g' src/App.jsx
-
-# 3. Перезапустите сервер
-npm run dev
-```
+### ✨ Fonctionnalités actuelles :
+- ✅ **4 chambres distinctes** avec navigation fluide
+- ✅ **Système de codes** pour progression
+- ✅ **Éclairage dynamique** adapté à chaque chambre
+- ✅ **Screamer avec GIF et son** synchronisés
+- ✅ **Musique d'ambiance** continue
+- ✅ **Contrôles FPS** optimisés
+- ✅ **Interface française** minimaliste
 
 ## 🚀 Installation et Lancement
 
@@ -69,34 +84,39 @@ npm run preview
 
 ## 🎮 Contrôles
 
-- **W, A, S, D** : Déplacement
+- **W, A, S, D** : Déplacement (vitesse réduite pour l'immersion)
 - **Souris** : Regarder autour
-- **Clic** : Verrouiller le curseur pour une meilleure immersion
+- **Clic** : Capturer la souris pour l'immersion
+- **F** : Ouvrir les portes avec codes
+- **ESC** : Libérer la souris / Fermer interfaces
 
 ## 📁 Structure du Projet
 
 ```
 src/
-├── App.jsx              # Gestion de l'état global et routage
-├── App.css              # Styles principaux
-├── main.jsx             # Point d'entrée React
-└── components/
-    ├── StartScreen.jsx   # Écran d'accueil
-    ├── Scene.jsx         # Configuration 3D et caméra
-    ├── TriggerZone.jsx   # Composant des zones de trigger
-    └── HorrorEffect.jsx  # Effets visuels des screamers
+├── App.jsx              # Logique principale du jeu
+├── App.css              # Styles et animations
+└── main.jsx             # Point d'entrée React
+
+public/
+├── chambre1.glb         # Modèle 3D Chambre 1
+├── chambre2.glb         # Modèle 3D Chambre 2
+├── chambreWC.glb        # Modèle 3D Chambre WC
+├── chambre3.glb         # Modèle 3D Chambre 3
+├── music/
+│   ├── scrimer.mp3      # Musique de fond (40% volume)
+│   └── gif.mp3          # Son screamer (100% volume)
+└── screamers/
+    └── 4eiD.gif         # GIF du screamer
 ```
 
 ## 🎨 Style et Atmosphère
 
-- **Palette de couleurs** : Noir, rouge sombre, blanc pour les contrastes
-- **Éclairage** : Ambiance faible, lumière directionnelle minimale, point light rouge
-- **Effets visuels** : 
-  - Brouillard pour limiter la visibilité
-  - Animations de glitch lors des screamers
-  - Effets de scanlines TV
-  - Tremblements et distorsions
-- **Audio** : Sons d'ambiance générés avec Web Audio API
+- **Interface** : Minimaliste en français
+- **Éclairage** : Ambiance sombre avec éclairage spécialisé par chambre
+- **Musique** : Boucle d'horreur continue à 40% de volume
+- **Effets sonores** : Screamer à volume maximum pour l'impact
+- **Vitesse** : Déplacement ralenti pour l'immersion
 
 ## 🔧 Technologies Utilisées
 
@@ -105,45 +125,55 @@ src/
 - **React Three Fiber** - Intégration React/Three.js
 - **React Three Drei** - Helpers et composants 3D
 - **Vite** - Bundler et serveur de développement
-- **Web Audio API** - Génération de sons procéduraux
+- **Web Audio API** - Gestion audio avancée
 
-## 📝 Modèle 3D
+## 🎧 Configuration Audio
 
-Le projet est configuré pour utiliser le fichier `10_31_2025.glb` qui doit être placé dans le dossier `public/`. 
+### Musique de fond (scrimer.mp3)
+- Volume : 40%
+- Format : MP3
+- Boucle : Continue dans toutes les chambres
+- Démarrage : Automatique au lancement
 
-Pour remplacer le modèle :
-1. Placez votre fichier `.glb` dans le dossier `public/`
-2. Modifiez le chemin dans `Scene.jsx` ligne : `const { scene } = useGLTF('/votre-fichier.glb');`
+### Son screamer (gif.mp3)  
+- Volume : 100% (impact maximum)
+- Déclenchement : 1 seconde après apparition du GIF
+- Localisation : Chambre WC uniquement
+- Coordonnées : X:-1.75, Z:-2.20
 
-## 🎧 Recommandations
+## 📍 Positions et Coordonnées
 
-- **Utilisez des écouteurs** pour une expérience immersive optimale
-- **Jouez dans l'obscurité** pour une meilleure atmosphère
+### Spawns par chambre :
+- **Chambre 1** : X:-1, Y:0.1, Z:-3.5
+- **Chambre 2** : X:2.40, Y:0.1, Z:3.60  
+- **Chambre WC** : X:2, Y:0.1, Z:-0.50
+- **Chambre 3** : X:0.2, Y:0.1, Z:-3.4
+
+### Trigger screamer :
+- **Position** : X:-1.75, Y:0, Z:-2.20 (Chambre WC)
+- **Rayon** : 1.5 unités
+- **Durée** : 2.5 secondes
+
+## 🔐 Codes d'Accès
+
+- **Chambre 1 → Chambre 2** : `0000`
+- **Chambre 2 → Chambre WC** : `2468`
+- **Passage direct Chambre 2 → Chambre 3** : Aucun code
+
+## 🎯 Recommandations
+
+- **Casque audio** recommandé pour l'immersion totale
+- **Environnement sombre** pour une meilleure atmosphère
 - **Navigateur moderne** requis (Chrome, Firefox, Safari récents)
-- **Casque VR** (optionnel) - Compatible WebXR pour une expérience encore plus immersive
-
-## 🐛 Debug
-
-Pour voir les zones de trigger (debug) :
-1. Ouvrez `src/components/TriggerZone.jsx`
-2. Changez `const debug = false;` en `const debug = true;`
-3. Les zones apparaîtront comme des sphères rouges semi-transparentes
-
-## 🔄 Développement Futur
-
-- Ajout de plus de types de screamers
-- Système de son spatialisé
-- Support pour plus de formats de modèles 3D
-- Système de sauvegarde de progression
-- Mode multijoueur
-- Intégration WebXR pour la VR
+- **Volume système** contrôlé (le screamer est à 100%)
 
 ## ⚠️ Avertissements
 
-- **Contenu pour adultes** : Effets visuels et sonores intenses
-- **Épilepsie** : Présence de flashs lumineux rapides
-- **Volume sonore** : Contrôlez le volume de votre système
+- **Contenu d'horreur** : Effets visuels et sonores intenses
+- **Épilepsie** : Présence possible de flashs lumineux
+- **Volume sonore** : Le screamer est très fort (100% volume)
+- **Âge recommandé** : 16+ en raison du contenu d'horreur
 
 ---
 
-*Développé pour l'événement Hackathon avec ❤️ et 👻*
+*Développé pour le Hackathon avec ❤️ et 👻*
